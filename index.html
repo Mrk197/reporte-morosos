@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DIGY - Reporte Clientes Sin Pago</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --color-primary: #1e3a5f;
+      --color-secondary: #2563eb;
+      --color-danger: #dc2626;
+      --color-warning: #f59e0b;
+      --color-success: #16a34a;
+      --color-light: #f9fafb;
+      --color-border: #e5e7eb;
+      --color-text: #1f2937;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+      color: var(--color-text);
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* NAVBAR */
+    .navbar {
+      background: var(--color-primary);
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .navbar h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+
+    .navbar p {
+      opacity: 0.9;
+      font-size: 14px;
+    }
+
+    /* MAIN CONTENT */
+    .content {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    /* SECTION HEADERS */
+    .section-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--color-primary);
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--color-secondary);
+    }
+
+    /* CONTROLS */
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .control-group label {
+      font-weight: 500;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .control-group input,
+    .control-group select {
+      padding: 10px;
+      border: 1px solid var(--color-border);
+      border-radius: 6px;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+
+    .control-group input:focus,
+    .control-group select:focus {
+      outline: none;
+      border-color: var(--color-secondary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    /* BUTTONS */
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary {
+      background: var(--color-secondary);
+      color: white;
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: #1d4ed8;
+      transform: translateY(-2px);
+    }
+
+    .btn-download {
+      background: var(--color-success);
+      color: white;
+    }
+
+    .btn-download:hover:not(:disabled) {
+      background: #15803d;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* PROGRESS BAR */
+    .progress-container {
+      display: none;
+      margin-bottom: 30px;
+    }
+
+    .progress-container.active {
+      display: block;
+    }
+
+    .progress-bar {
+      height: 24px;
+      background: var(--color-light);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, var(--color-secondary), var(--color-success));
+      background-size: 200% 100%;
+      animation: loading 1.5s ease-in-out infinite;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    @keyframes loading {
+      0% { background-position: 200% 0; }
+      50% { background-position: 0% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    .progress-text {
+      font-size: 14px;
+      color: #666;
+      text-align: center;
+    }
+
+    /* LOG CONTAINER */
+    .log-container {
+      display: none;
+      background: #f3f4f6;
+      border-radius: 6px;
+      padding: 15px;
+      margin-bottom: 20px;
+      max-height: 300px;
+      overflow-y: auto;
+      border-left: 3px solid var(--color-secondary);
+    }
+
+    .log-container.active {
+      display: block;
+    }
+
+    .log-line {
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      color: #555;
+      margin: 5px 0;
+    }
+
+    /* SUMMARY */
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
+      display: none;
+    }
+
+    .summary.active {
+      display: grid;
+    }
+
+    .summary-card {
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+      border-left: 4px solid var(--color-secondary);
+    }
+
+    .summary-card.danger {
+      border-left-color: var(--color-danger);
+    }
+
+    .summary-card.warning {
+      border-left-color: var(--color-warning);
+    }
+
+    .summary-card.success {
+      border-left-color: var(--color-success);
+    }
+
+    .summary-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--color-primary);
+      margin-bottom: 5px;
+    }
+
+    .summary-label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: #666;
+    }
+
+    /* TABS */
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid var(--color-border);
+    }
+
+    .tab-btn {
+      background: none;
+      border: none;
+      padding: 12px 20px;
+      font-weight: 600;
+      cursor: pointer;
+      color: #999;
+      border-bottom: 3px solid transparent;
+      transition: all 0.3s;
+    }
+
+    .tab-btn.active {
+      color: var(--color-secondary);
+      border-bottom-color: var(--color-secondary);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* TABLE */
+    .table-wrapper {
+      overflow-x: auto;
+      border-radius: 6px;
+      border: 1px solid var(--color-border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    thead {
+      background: var(--color-primary);
+      color: white;
+      position: sticky;
+      top: 0;
+    }
+
+    th {
+      padding: 15px;
+      text-align: left;
+      font-weight: 600;
+    }
+
+    td {
+      padding: 12px 15px;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    tbody tr:hover {
+      background: var(--color-light);
+    }
+
+    tbody tr:nth-child(even) {
+      background: #fafafa;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .status-online {
+      background: #dcfce7;
+      color: var(--color-success);
+    }
+
+    .status-offline {
+      background: #fee2e2;
+      color: var(--color-danger);
+    }
+
+    .status-retirar {
+      background: #fee2e2;
+      color: var(--color-danger);
+    }
+
+    .status-suspendido {
+      background: #fef3c7;
+      color: var(--color-warning);
+    }
+
+    /* EMPTY STATE */
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #999;
+    }
+
+    .empty-state svg {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 20px;
+      opacity: 0.5;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      .content {
+        padding: 20px;
+      }
+
+      .controls {
+        grid-template-columns: 1fr;
+      }
+
+      button {
+        padding: 10px 16px;
+        font-size: 13px;
+      }
+
+      table {
+        font-size: 12px;
+      }
+
+      th, td {
+        padding: 8px 10px;
+      }
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top: 2px solid white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .error-message {
+      background: #fee2e2;
+      border-left: 4px solid var(--color-danger);
+      color: var(--color-danger);
+      padding: 12px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    .error-message.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- NAVBAR -->
+    <div class="navbar">
+      <h1>📊 DIGY - Reporte Clientes</h1>
+      <p>Visualiza y gestiona los reportes de clientes sin primer pago</p>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="content">
+      <!-- ERROR MESSAGE -->
+      <div class="error-message" id="errorMsg"></div>
+
+      <!-- CONTROLS SECTION -->
+      <div>
+        <h2 class="section-title">⚙️ Parámetros de Ejecución</h2>
+
+        <div class="controls">
+          <div class="control-group">
+            <label for="pages" title="Cantidad de páginas de clientes a revisar. Cada página contiene aproximadamente 100 registros.">Páginas a revisar:</label>
+            <input type="number" id="pages" value="20" min="1">
+          </div>
+          <div class="control-group">
+            <label for="perfil" title="ID del perfil de plan a filtrar. Ej: 2026 para filtrar solo ese perfil de suscripción.">Perfil de plan:</label>
+            <input type="text" id="perfil" value="2026">
+          </div>
+          <div class="control-group">
+            <label for="categoria" title="Tipo de clientes a reportar: Retirar (sin pago urgente), Sin Factura (aún no facturados), o Todos los sin primer pago.">Categoría:</label>
+            <select id="categoria">
+              <option value="retirar">Retirar Modem</option>
+              <option value="sinFactura">Sin Factura</option>
+              <option value="todos">Todos</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <label for="format" title="Formato del archivo de salida: JSON para datos estructurados, Excel para visualización, CSV para importación.">Formato de descarga:</label>
+            <select id="format">
+              <option value="json">JSON</option>
+              <option value="excel" selected>Excel</option>
+              <option value="csv">CSV</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- FILTROS DE FECHA -->
+        <h3 style="margin-top: 25px; margin-bottom: 15px; font-size: 16px; font-weight: 600; color: var(--color-primary); border-bottom: 1px solid var(--color-border); padding-bottom: 10px;">📅 Filtro de Fecha de Instalación (Opcional)</h3>
+        
+        <div class="controls">
+          <div class="control-group">
+            <label for="diasInstalacion" title="Mostrar solo clientes instalados en los últimos N días. Ej: 30 para últimos 30 días. Mutuamente excluyente con rango de fechas.">Últimos N días:</label>
+            <input type="number" id="diasInstalacion" placeholder="Ej: 30" min="0">
+            <small style="display: block; margin-top: 5px; color: #666; font-size: 12px;">Deja vacío para desactivar este filtro</small>
+          </div>
+          <div class="control-group">
+            <label for="desdeFecha" title="Mostrar clientes instalados desde esta fecha en adelante (incluida). Combina con 'Hasta fecha' para un rango. Mutuamente excluyente con 'Últimos N días'.">Desde fecha (YYYY-MM-DD):</label>
+            <input type="date" id="desdeFecha">
+            <small style="display: block; margin-top: 5px; color: #666; font-size: 12px;">Clientes instalados a partir de esta fecha</small>
+          </div>
+          <div class="control-group">
+            <label for="hastaFecha" title="Mostrar clientes instalados hasta esta fecha (incluida). Combina con 'Desde fecha' para un rango. Mutuamente excluyente con 'Últimos N días'.">Hasta fecha (YYYY-MM-DD):</label>
+            <input type="date" id="hastaFecha">
+            <small style="display: block; margin-top: 5px; color: #666; font-size: 12px;">Clientes instalados hasta esta fecha</small>
+          </div>
+        </div>
+
+        <div class="button-group">
+          <button class="btn-primary" id="runBtn" onclick="runScript()">
+            <span>▶️ Ejecutar Script</span>
+          </button>
+          <button class="btn-download" id="downloadBtn" onclick="downloadFile()" disabled>
+            📥 Descargar Archivo
+          </button>
+        </div>
+
+        <!-- PROGRESS -->
+        <div class="progress-container" id="progressContainer">
+          <div class="progress-bar">
+            <div class="progress-fill">Procesando...</div>
+          </div>
+          <div class="progress-text" id="progressText">Iniciando...</div>
+        </div>
+
+        <!-- LOG -->
+        <div class="log-container" id="logContainer">
+          <div id="logContent"></div>
+        </div>
+      </div>
+
+      <!-- RESULTS SECTION -->
+      <div id="resultsSection" style="display: none; margin-top: 40px;">
+        <h2 class="section-title">📈 Resultados</h2>
+
+        <!-- SUMMARY CARDS -->
+        <div class="summary" id="summary">
+          <div class="summary-card danger">
+            <div class="summary-value" id="retirarCount">0</div>
+            <div class="summary-label">Para Retirar</div>
+          </div>
+          <div class="summary-card warning">
+            <div class="summary-value" id="suspendidosCount">0</div>
+            <div class="summary-label">Suspendidos</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-value" id="sinFacturaCount">0</div>
+            <div class="summary-label">Sin Factura</div>
+          </div>
+          <div class="summary-card success">
+            <div class="summary-value" id="totalCount">0</div>
+            <div class="summary-label">Total</div>
+          </div>
+        </div>
+
+        <!-- TABS -->
+        <div class="tabs">
+          <button class="tab-btn active" onclick="switchTab('retirar')">
+            🚨 Retirar Modem (<span id="retirar-count">0</span>)
+          </button>
+          <button class="tab-btn" onclick="switchTab('suspendidos')">
+            ⚠️ Suspendidos (<span id="suspendidos-count">0</span>)
+          </button>
+          <button class="tab-btn" onclick="switchTab('sinFactura')">
+            ℹ️ Sin Factura (<span id="sinFactura-count">0</span>)
+          </button>
+        </div>
+
+        <!-- TAB CONTENTS -->
+        <div class="tab-content active" id="tab-retirar">
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nombre</th>
+                  <th>Teléfono</th>
+                  <th>Plan</th>
+                  <th>Deuda</th>
+                  <th>Conexión</th>
+                  <th>Días Instalado</th>
+                </tr>
+              </thead>
+              <tbody id="retirar-tbody">
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-suspendidos">
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nombre</th>
+                  <th>Teléfono</th>
+                  <th>Plan</th>
+                  <th>Estado</th>
+                  <th>Conexión</th>
+                  <th>Días Instalado</th>
+                </tr>
+              </thead>
+              <tbody id="suspendidos-tbody">
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-sinFactura">
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nombre</th>
+                  <th>Teléfono</th>
+                  <th>Plan</th>
+                  <th>Costo</th>
+                  <th>Conexión</th>
+                  <th>Días Instalado</th>
+                </tr>
+              </thead>
+              <tbody id="sinFactura-tbody">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- HISTORY SECTION -->
+      <div style="margin-top: 40px;">
+        <h2 class="section-title">📜 Histórico de Ejecuciones</h2>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Perfil</th>
+                <th>Categoría</th>
+                <th>Filtro de Fecha</th>
+                <th>Para Retirar</th>
+                <th>Suspendidos</th>
+                <th>Sin Factura</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody id="history-tbody">
+              <tr>
+                <td colspan="8" style="text-align: center; padding: 30px; color: #999;">
+                  Aún no hay ejecuciones registradas
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentData = null;
+
+    // ============================================================
+    // Run Script
+    // ============================================================
+    async function runScript() {
+      const btn = document.getElementById('runBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="loading-spinner"></span> Ejecutando...';
+
+      const format = document.getElementById('format').value;
+      const pages = document.getElementById('pages').value;
+      const perfil = document.getElementById('perfil').value;
+      const categoria = document.getElementById('categoria').value;
+      const diasInstalacion = document.getElementById('diasInstalacion').value || '';
+      const desdeFecha = document.getElementById('desdeFecha').value || '';
+      const hastaFecha = document.getElementById('hastaFecha').value || '';
+
+      showProgress(true);
+      clearLog();
+      hideError();
+
+      try {
+        const response = await fetch('/api/run-script', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ format, pages, perfil, categoria, diasInstalacion, desdeFecha, hastaFecha }),
+        });
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const event = JSON.parse(line.slice(6));
+                handleEvent(event);
+              } catch (e) {
+                console.error('Parse error:', e);
+              }
+            }
+          }
+        }
+      } catch (err) {
+        showError(`Error: ${err instanceof Error ? err.message : 'Error desconocido'}`);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '▶️ Ejecutar Script';
+        showProgress(false);
+      }
+    }
+
+    function handleEvent(event) {
+      const { status, linea, resultado, mensaje } = event;
+
+      if (status === 'procesando' && linea) {
+        addLog(linea);
+      } else if (status === 'completo' && resultado) {
+        currentData = resultado;
+        displayResults(resultado);
+        loadHistory();
+        document.getElementById('downloadBtn').disabled = false;
+      } else if (status === 'error') {
+        if (linea) addLog(`❌ ${linea}`);
+        if (mensaje) showError(mensaje);
+      } else if (status === 'iniciando' && mensaje) {
+        addLog(mensaje);
+      }
+    }
+
+    // ============================================================
+    // Display Results
+    // ============================================================
+    function displayResults(data) {
+      // Summary
+      const retirar = data.retirarModem?.length || 0;
+      const suspendidos = data.suspendidosSinPago?.length || 0;
+      const sinFactura = data.sinFacturaAun?.length || 0;
+      const total = retirar + suspendidos + sinFactura;
+
+      document.getElementById('retirarCount').textContent = retirar;
+      document.getElementById('suspendidosCount').textContent = suspendidos;
+      document.getElementById('sinFacturaCount').textContent = sinFactura;
+      document.getElementById('totalCount').textContent = total;
+
+      // Tab counts
+      document.getElementById('retirar-count').textContent = retirar;
+      document.getElementById('suspendidos-count').textContent = suspendidos;
+      document.getElementById('sinFactura-count').textContent = sinFactura;
+
+      // Tables
+      fillTable('retirar', data.retirarModem || []);
+      fillTable('suspendidos', data.suspendidosSinPago || []);
+      fillTable('sinFactura', data.sinFacturaAun || []);
+
+      // Show results
+      document.getElementById('resultsSection').style.display = 'block';
+      document.getElementById('summary').classList.add('active');
+    }
+
+    function fillTable(type, clientes) {
+      const tbody = document.getElementById(`${type}-tbody`);
+      tbody.innerHTML = '';
+
+      if (clientes.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px; color:#999;">Sin resultados</td></tr>';
+        return;
+      }
+
+      clientes.forEach((c) => {
+        const row = document.createElement('tr');
+        const statusClass = c.servicio.statusUser === 'ONLINE' ? 'status-online' : 'status-offline';
+        const statusText = c.servicio.statusUser;
+        const deuda = type === 'retirar' ? `$${c.facturacion.totalDeuda}` : '-';
+
+        row.innerHTML = `
+          <td>${c.id}</td>
+          <td>${c.nombre}</td>
+          <td>${c.movil || c.telefono}</td>
+          <td>${c.servicio.perfil}</td>
+          <td>${type === 'retirar' ? deuda : c.estado}</td>
+          <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+          <td>${c.servicio.diasDesdeInstalacion} días</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    // ============================================================
+    // Utilities
+    // ============================================================
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+
+      event.target.classList.add('active');
+      document.getElementById(`tab-${tab}`).classList.add('active');
+    }
+
+    function showProgress(show) {
+      document.getElementById('progressContainer').classList.toggle('active', show);
+      document.getElementById('logContainer').classList.toggle('active', show);
+    }
+
+    function addLog(line) {
+      const logContent = document.getElementById('logContent');
+      const div = document.createElement('div');
+      div.className = 'log-line';
+      div.textContent = line;
+      logContent.appendChild(div);
+      logContent.parentElement.scrollTop = logContent.parentElement.scrollHeight;
+    }
+
+    function clearLog() {
+      document.getElementById('logContent').innerHTML = '';
+    }
+
+    function showError(msg) {
+      const err = document.getElementById('errorMsg');
+      err.textContent = msg;
+      err.classList.add('active');
+    }
+
+    function hideError() {
+      document.getElementById('errorMsg').classList.remove('active');
+    }
+
+    async function downloadFile() {
+      const format = document.getElementById('format').value;
+      const pages = document.getElementById('pages').value;
+      const perfil = document.getElementById('perfil').value;
+      const categoria = document.getElementById('categoria').value;
+      const diasInstalacion = document.getElementById('diasInstalacion').value || '';
+      const desdeFecha = document.getElementById('desdeFecha').value || '';
+      const hastaFecha = document.getElementById('hastaFecha').value || '';
+
+      const params = new URLSearchParams();
+      params.append('pages', pages);
+      params.append('perfil', perfil);
+      params.append('categoria', categoria);
+      if (diasInstalacion) params.append('diasInstalacion', diasInstalacion);
+      if (desdeFecha) params.append('desdeFecha', desdeFecha);
+      if (hastaFecha) params.append('hastaFecha', hastaFecha);
+
+      const url = `/api/download/${format}?${params.toString()}`;
+      window.location.href = url;
+    }
+
+    async function loadHistory() {
+      try {
+        const resp = await fetch('/api/history');
+        const history = await resp.json();
+        const tbody = document.getElementById('history-tbody');
+
+        if (history.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:#999;">No hay histórico</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = history.reverse().map(h => `
+          <tr>
+            <td>${new Date(h.timestamp).toLocaleString('es-MX')}</td>
+            <td>${h.perfil ? h.perfil : '-'}</td>
+            <td>${h.categoria ? h.categoria : '-'}</td>
+            <td><small>${h.filtroFecha ? h.filtroFecha : 'Sin filtro'}</small></td>
+            <td>${h.totales.retirarModem}</td>
+            <td>${h.totales.suspendidosSinPago}</td>
+            <td>${h.totales.sinFacturaAun}</td>
+            <td><strong>${h.totales.retirarModem + h.totales.suspendidosSinPago + h.totales.sinFacturaAun}</strong></td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        console.error('Error loading history:', err);
+      }
+    }
+
+    // Load initial data
+    window.addEventListener('load', () => {
+      loadHistory();
+      
+      // Setup mutual exclusivity for date filters
+      const diasInput = document.getElementById('diasInstalacion');
+      const desdeInput = document.getElementById('desdeFecha');
+      const hastaInput = document.getElementById('hastaFecha');
+      
+      function updateFilterState() {
+        const hasDias = diasInput.value.trim() !== '';
+        const hasDateRange = desdeInput.value !== '' || hastaInput.value !== '';
+        
+        // Si hay N días, deshabilitar fechas
+        desdeInput.disabled = hasDias;
+        hastaInput.disabled = hasDias;
+        
+        // Si hay rango de fechas, deshabilitar N días
+        diasInput.disabled = hasDateRange;
+        
+        // Aplicar estilo visual
+        if (hasDias) {
+          desdeInput.style.backgroundColor = '#f0f0f0';
+          hastaInput.style.backgroundColor = '#f0f0f0';
+          desdeInput.style.cursor = 'not-allowed';
+          hastaInput.style.cursor = 'not-allowed';
+        } else {
+          desdeInput.style.backgroundColor = '';
+          hastaInput.style.backgroundColor = '';
+          desdeInput.style.cursor = '';
+          hastaInput.style.cursor = '';
+        }
+        
+        if (hasDateRange) {
+          diasInput.style.backgroundColor = '#f0f0f0';
+          diasInput.style.cursor = 'not-allowed';
+        } else {
+          diasInput.style.backgroundColor = '';
+          diasInput.style.cursor = '';
+        }
+      }
+      
+      // Event listeners para cambios
+      diasInput.addEventListener('input', updateFilterState);
+      desdeInput.addEventListener('change', updateFilterState);
+      hastaInput.addEventListener('change', updateFilterState);
+      
+      // Estado inicial
+      updateFilterState();
+    });
+  </script>
+</body>
+</html>

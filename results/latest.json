@@ -1,0 +1,351 @@
+{
+  "resumen": {
+    "totalClientes": "~24100",
+    "paginasRevisadas": "217-241",
+    "clientesRevisados": 2421,
+    "retirarModem": 10,
+    "suspendidosSinPago": 1,
+    "sinFacturaAun": 0
+  },
+  "retirarModem": [
+    {
+      "id": 23466,
+      "nombre": "Edgar Melecio Guzman Mendez",
+      "estado": "SUSPENDIDO",
+      "correo": "guzmanedgar422@gmail.com",
+      "movil": "7851074575",
+      "telefono": "7851074575",
+      "direccion": "Calle Carolino Anaya S/N, Loc. Potrero Del Llano, Cp. 92750, Alamo Temapache, Ver",
+      "coordenada": "21.07807290088595, -97.72672830279572",
+      "servicio": {
+        "perfil": "2026 Basico Plus 399 x 50MB",
+        "costo": "399.00",
+        "instalado": "2026-01-17",
+        "diasDesdeInstalacion": 54,
+        "statusUser": "ONLINE",
+        "nodo": 55,
+        "pppuser": "Edgar_Melecio_Guzman"
+      },
+      "facturacion": {
+        "facturasPendientes": 1,
+        "totalDeuda": "399.00",
+        "facturasPagadas": 0,
+        "detalleFacturasPendientes": [
+          {
+            "id": 617806,
+            "total": "399.00",
+            "vencimiento": "2026-02-17"
+          }
+        ]
+      }
+    },
+    {
+      "id": 23533,
+      "nombre": "Manuela Hernandez Juarez",
+      "estado": "SUSPENDIDO",
+      "correo": "manuela.567hernandez@gmail.com",
+      "movil": "7841194699",
+      "telefono": "7841194699",
+      "direccion": "Calle Luis Echeverria Alvarez SN Localidad Oriente Oriente Medio Dia CP. 93182 Espinal, Ver. ",
+      "coordenada": "20.273512, -97.482812",
+      "servicio": {
+        "perfil": "2026 Basico Plus 399 x 50MB",
+        "costo": "399.00",
+        "instalado": "2026-01-22",
+        "diasDesdeInstalacion": 49,
+        "statusUser": "OFFLINE",
+        "nodo": 77,
+        "pppuser": "Manuela_Hdez_Juarez"
+      },
+      "facturacion": {
+        "facturasPendientes": 1,
+        "totalDeuda": "399.00",
+        "facturasPagadas": 0,
+        "detalleFacturasPendientes": [
+          {
+            "id": 629987,
+            "total": "399.00",
+            "vencimiento": "2026-02-24"
+          }
+        ]
+      }
+    },
+    {
+      "id": 23615,
+      "nombre": "Jose Luis Perez Vega",
+      "estado": "SUSPENDIDO",
+      "correo": "racozo_agromac@hotmail.com",
+      "movil": "7841082525",
+      "telefono": "7841082525",
+      "direccion": "Calle Galeana SN Localidad Comalteco CP. 93190 Espinal, Ver.",
+      "coordenada": "20.252010345458995, -97.47111082077036",
+      "servicio": {
+        "perfil": "2026 Basico Plus 399 x 50MB",
+        "costo": "399.00",
+        "instalado": "2026-01-29",
+        "diasDesdeInstalacion": 42,
+        "statusUser": "OFFLINE",
+        "nodo": 77,
+        "pppuser": "Jose_Luis_Perez_Vega"
+      },
+      "facturacion": {
+        "facturasPendientes": 1,
+        "totalDeuda": "399.00",
+        "facturasPagadas": 0,
+        "detalleFacturasPendientes": [
+          {
+            "id": 617901,
+            "total": "399.00",
+            "vencimiento": "2026-02-28"
+          }
+        ]
+      }
+    },
+    {
+      "id": 23652,
+      "nombre": "Mirian Santos Carballo",
+      "estado": "SUSPENDIDO",
+      "correo": "miriam1999.ms1@gmail.com",
+      "movil": "5620319888",
+      "telefono": "5620319888",
+      "direccion": "Calle Agula Real SN Colonia Rincon Verde 2DA Secc CP. 53219 Naucalpan de Juarez, Mex. ",
+      "coordenada": "20.2739782, -97.5521408",
+      "servicio": {
+        "perfil": "2026 Basico Plus 399 x 50MB",
+        "costo": "399.00",
+        "instalado": "2026-02-03",
+        "diasDesdeInstalacion": 37,
+        "statusUser": "OFFLINE",
+        "nodo": 50,
+        "pppuser": "Miriam_Santos_Carballo"
+      },
+      "facturacion": {
+        "facturasPendientes": 1,
+        "totalDeuda": "399.00",
+        "facturasPagadas": 0,
+        "detalleFacturasPendientes": [
+          {
+            "id": 631490,
+            "total": "399.00",
+            "vencimiento": "2026-03-04"
+          }
+        ]
+      }
+    },
+    {
+      "id": 23663,
+      "nombre": "Paloma Cecilia de la Cruz Morales",
+      "estado": "SUSPENDIDO",
+      "correo": "delacruzmoralespalomacecilia@gmail.com",
+      "movil": "7851055419",
+      "telefono": "7851055419",
+      "direccion": "Localidad Ejido Ixcatepec SN Localidad Ejido Ixcatepec CP. 92270 Ixcatepec, Ver. ",
+      "coordenada": "21.23825904228971, -98.00588811339591",
+      "servicio": {
+        "perfil": "2026 Basico Plus 399 x 50MB",
+        "costo": "399.00",
+        "instalado": "2026-02-04",
+        "diasDesdeInstalacion": 36,
+        "statusUser": "ONLINE",
+        "nodo": 58,
+        "pppuser": "Paloma_Cecilia_DLCruz_Morales"
+      },
+      "facturacion": {
+        "facturasPendientes": 1,
+        "totalDeuda": "399.00",
+        "facturasPagadas": 0,
+        "detalleFacturasPendientes": [
+          {
+            "id": 636613,
+            "total": "399.00",
+            "vencimiento": "2026-03-05"
+          }
+        ]
+      }
+    },
+    {
+      "id": 23670,
+      "nombre": "Martha Diaz Martinez",
+      "estado": "SUSPENDIDO",
+      "correo": "Cris29dc@hotmail.com",
+      "movil": "5535209136",
+      "telefono": "5535209136",
+      "direccion": "Localidad Tepetate SN Localidad Tepetate CP. 92682 Ixhuatlan de Madero, Ver.",
+      "coordenada": "20.580872, -97.926931",
+      "servicio": {
+        "perfil": "2026 Basico Plus 399 x 50MB",
+        "costo": "399.00",
+        "instalado": "2026-02-04",
+        "diasDesdeInstalacion": 36,
+        "statusUser": "ONLINE",
+        "nodo": 80,
+        "pppuser": "Martha_Diaz_Mtz"
+      },
+      "facturacion": {
+        "facturasPendientes": 1,
+        "totalDeuda": "399.00",
+        "facturasPagadas": 0,
+        "detalleFacturasPendientes": [
+          {
+            "id": 636616,
+            "total": "399.00",
+            "vencimiento": "2026-03-05"
+          }
+        ]
+      }
+    },
+    {
+      "id": 23724,
+      "nombre": "Yaneli Antonio Santiago",
+      "estado": "SUSPENDIDO",
+      "correo": "Yaneliantoniosantiago@gmail.com",
+      "movil": "7831478928",
+      "telefono": "7831478928",
+      "direccion": "Calle Leyes de Reforma MZA 14 LT numero 8 Colonia Lazaro Cardenas CP. 92830 Tuxpan, Ver. ",
+      "coordenada": "21.021887, -97.518535",
+      "servicio": {
+        "perfil": "2026 Basico Plus 399 x 50MB",
+        "costo": "399.00",
+        "instalado": "2026-02-09",
+        "diasDesdeInstalacion": 31,
+        "statusUser": "ONLINE",
+        "nodo": 6,
+        "pppuser": "Yaneli_Antonio_Santiago"
+      },
+      "facturacion": {
+        "facturasPendientes": 1,
+        "totalDeuda": "399.00",
+        "facturasPagadas": 0,
+        "detalleFacturasPendientes": [
+          {
+            "id": 636720,
+            "total": "399.00",
+            "vencimiento": "2026-03-10"
+          }
+        ]
+      }
+    },
+    {
+      "id": 23741,
+      "nombre": "Ricardo De La Cruz De La Cruz",
+      "estado": "SUSPENDIDO",
+      "correo": "No tengo",
+      "movil": "7651140698",
+      "telefono": "7651140698",
+      "direccion": "Telebachillerato tzocohuite",
+      "coordenada": "20.814450949412052, -97.93093809071517",
+      "servicio": {
+        "perfil": "2026 Basico Plus 399 x 50MB",
+        "costo": "399.00",
+        "instalado": "2026-02-10",
+        "diasDesdeInstalacion": 30,
+        "statusUser": "ONLINE",
+        "nodo": 22,
+        "pppuser": "Ricardo_DLCruz_DLCruz"
+      },
+      "facturacion": {
+        "facturasPendientes": 1,
+        "totalDeuda": "399.00",
+        "facturasPagadas": 0,
+        "detalleFacturasPendientes": [
+          {
+            "id": 631569,
+            "total": "399.00",
+            "vencimiento": "2026-03-01"
+          }
+        ]
+      }
+    },
+    {
+      "id": 23748,
+      "nombre": "Arcadio Martinez Martinez",
+      "estado": "SUSPENDIDO",
+      "correo": "arcadio_mart98@icloud.com",
+      "movil": "3348751240",
+      "telefono": "3348751240",
+      "direccion": "Localidad la colmena SN Localidad la colmena CP. 92682 Ixhuatlan de Madero, Ver. ",
+      "coordenada": "20.861305, -98.0489059",
+      "servicio": {
+        "perfil": "2026 Basico Plus 399 x 50MB",
+        "costo": "399.00",
+        "instalado": "2026-02-10",
+        "diasDesdeInstalacion": 30,
+        "statusUser": "OFFLINE",
+        "nodo": 54,
+        "pppuser": "Arcadio_Mtz_Mtzz"
+      },
+      "facturacion": {
+        "facturasPendientes": 1,
+        "totalDeuda": "399.00",
+        "facturasPagadas": 0,
+        "detalleFacturasPendientes": [
+          {
+            "id": 631575,
+            "total": "399.00",
+            "vencimiento": "2026-03-01"
+          }
+        ]
+      }
+    },
+    {
+      "id": 23752,
+      "nombre": "Celia Patricia Valdes Manteca",
+      "estado": "SUSPENDIDO",
+      "correo": "ddd666777888@ Hotmail.com",
+      "movil": "5539408444",
+      "telefono": "5539408444",
+      "direccion": "Calle Anaxagoras 704 401 Colonia Piedad Narvarte CP. 03000 Benito Juarez, CDMX. ",
+      "coordenada": "21.276714, -97.446763",
+      "servicio": {
+        "perfil": "2026 Basico Plus 399 x 50MB",
+        "costo": "399.00",
+        "instalado": "2026-02-11",
+        "diasDesdeInstalacion": 29,
+        "statusUser": "ONLINE",
+        "nodo": 42,
+        "pppuser": "Celia_Patricia_Valdez_Manteca"
+      },
+      "facturacion": {
+        "facturasPendientes": 1,
+        "totalDeuda": "399.00",
+        "facturasPagadas": 0,
+        "detalleFacturasPendientes": [
+          {
+            "id": 631578,
+            "total": "399.00",
+            "vencimiento": "2026-03-01"
+          }
+        ]
+      }
+    }
+  ],
+  "suspendidosSinPago": [
+    {
+      "id": 24038,
+      "nombre": "Miriam Reyes Blanco",
+      "estado": "SUSPENDIDO",
+      "correo": "lagosgomez9@gmail.com",
+      "movil": "7681048295",
+      "telefono": "7681048295",
+      "direccion": "Calle Vicente Guerrero S/N Localidad Barra De Corazones CP 92562 Tamiahua, Ver.",
+      "coordenada": "21.2787078, -97.4468747",
+      "servicio": {
+        "perfil": "2026 Profesional 550 x 100MB",
+        "costo": "550.00",
+        "instalado": "2026-03-10",
+        "diasDesdeInstalacion": 2,
+        "statusUser": "OFFLINE",
+        "nodo": 42,
+        "pppuser": "Miriam_R_Blanco"
+      },
+      "facturacion": {
+        "facturasPendientes": 0,
+        "totalDeuda": "0.00",
+        "facturasPagadas": 0,
+        "detalleFacturasPendientes": []
+      }
+    }
+  ],
+  "sinFacturaAun": [],
+  "consultadoEn": "2026-03-12T01:06:31.559Z"
+}

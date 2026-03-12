@@ -1,0 +1,25 @@
+{
+  "name": "mikrowisp-scripts",
+  "version": "1.0.0",
+  "description": "Scripts utilitarios para MikroWisp API - DIGY",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "clientes-sin-pago": "npx tsx new-clients-unpaid.ts",
+    "clientes-sin-pago:excel": "npx tsx new-clients-unpaid.ts --format excel",
+    "clientes-sin-pago:csv": "npx tsx new-clients-unpaid.ts --format csv",
+    "clientes-sin-pago:test": "npx tsx new-clients-unpaid.ts --test",
+    "server": "npx tsx server.ts"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "exceljs": "^4.4.0",
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "@types/node": "^22.0.0",
+    "@types/express": "^4.17.17"
+  }
+}

@@ -1,0 +1,82 @@
+[
+  {
+    "timestamp": "2026-03-12T00:52:55.361Z",
+    "formato": "json",
+    "perfil": "2026",
+    "categoria": "retirar",
+    "filtroFecha": "Últimos 15 días",
+    "resumen": {
+      "totalClientes": "~24100",
+      "paginasRevisadas": "222-241",
+      "clientesRevisados": 1921,
+      "retirarModem": 0,
+      "suspendidosSinPago": 1,
+      "sinFacturaAun": 0
+    },
+    "totales": {
+      "retirarModem": 0,
+      "suspendidosSinPago": 1,
+      "sinFacturaAun": 0
+    }
+  },
+  {
+    "timestamp": "2026-03-12T00:53:58.950Z",
+    "formato": "json",
+    "perfil": "2026",
+    "categoria": "todos",
+    "filtroFecha": "2026-01-01 a 2026-03-11",
+    "resumen": {
+      "totalClientes": "~24100",
+      "paginasRevisadas": "238-241",
+      "clientesRevisados": 321,
+      "retirarModem": 3,
+      "suspendidosSinPago": 1,
+      "sinFacturaAun": 0
+    },
+    "totales": {
+      "retirarModem": 3,
+      "suspendidosSinPago": 1,
+      "sinFacturaAun": 0
+    }
+  },
+  {
+    "timestamp": "2026-03-12T00:54:48.033Z",
+    "formato": "json",
+    "perfil": "2026",
+    "categoria": "todos",
+    "filtroFecha": "2026-01-01 a 2026-03-11",
+    "resumen": {
+      "totalClientes": "~24100",
+      "paginasRevisadas": "NaN-241",
+      "clientesRevisados": 0,
+      "retirarModem": 0,
+      "suspendidosSinPago": 0,
+      "sinFacturaAun": 0
+    },
+    "totales": {
+      "retirarModem": 0,
+      "suspendidosSinPago": 0,
+      "sinFacturaAun": 0
+    }
+  },
+  {
+    "timestamp": "2026-03-12T01:06:31.672Z",
+    "formato": "json",
+    "perfil": "2026",
+    "categoria": "todos",
+    "filtroFecha": "2026-01-01 a 2026-03-11",
+    "resumen": {
+      "totalClientes": "~24100",
+      "paginasRevisadas": "217-241",
+      "clientesRevisados": 2421,
+      "retirarModem": 10,
+      "suspendidosSinPago": 1,
+      "sinFacturaAun": 0
+    },
+    "totales": {
+      "retirarModem": 10,
+      "suspendidosSinPago": 1,
+      "sinFacturaAun": 0
+    }
+  }
+]
