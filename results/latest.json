@@ -1,9 +1,9 @@
 {
   "resumen": {
     "totalClientes": "~24100",
-    "paginasRevisadas": "217-241",
-    "clientesRevisados": 2421,
-    "retirarModem": 10,
+    "paginasRevisadas": "212-241",
+    "clientesRevisados": 2928,
+    "retirarModem": 12,
     "suspendidosSinPago": 1,
     "sinFacturaAun": 0
   },
@@ -177,7 +177,7 @@
         "costo": "399.00",
         "instalado": "2026-02-04",
         "diasDesdeInstalacion": 36,
-        "statusUser": "ONLINE",
+        "statusUser": "OFFLINE",
         "nodo": 80,
         "pppuser": "Martha_Diaz_Mtz"
       },
@@ -190,6 +190,37 @@
             "id": 636616,
             "total": "399.00",
             "vencimiento": "2026-03-05"
+          }
+        ]
+      }
+    },
+    {
+      "id": 23720,
+      "nombre": "Araceli Hernandez Hernandez",
+      "estado": "SUSPENDIDO",
+      "correo": "gmhmanuel45@gmail.com",
+      "movil": "7831501744",
+      "telefono": "",
+      "direccion": "Calle Lazaro Cardenas SN Localidad Guillermo Velez Castillo CP. 92736 Alamo Temapache, Ver. ",
+      "coordenada": "21.063289, -97.626239",
+      "servicio": {
+        "perfil": "2026 Basico Plus 399 x 50MB",
+        "costo": "399.00",
+        "instalado": "2026-02-09",
+        "diasDesdeInstalacion": 31,
+        "statusUser": "OFFLINE",
+        "nodo": 7,
+        "pppuser": "Araceli_Hdez_Hdezz"
+      },
+      "facturacion": {
+        "facturasPendientes": 1,
+        "totalDeuda": "399.00",
+        "facturasPagadas": 0,
+        "detalleFacturasPendientes": [
+          {
+            "id": 636106,
+            "total": "399.00",
+            "vencimiento": "2026-03-07"
           }
         ]
       }
@@ -208,7 +239,7 @@
         "costo": "399.00",
         "instalado": "2026-02-09",
         "diasDesdeInstalacion": 31,
-        "statusUser": "ONLINE",
+        "statusUser": "OFFLINE",
         "nodo": 6,
         "pppuser": "Yaneli_Antonio_Santiago"
       },
@@ -239,7 +270,7 @@
         "costo": "399.00",
         "instalado": "2026-02-10",
         "diasDesdeInstalacion": 30,
-        "statusUser": "ONLINE",
+        "statusUser": "OFFLINE",
         "nodo": 22,
         "pppuser": "Ricardo_DLCruz_DLCruz"
       },
@@ -301,7 +332,7 @@
         "costo": "399.00",
         "instalado": "2026-02-11",
         "diasDesdeInstalacion": 29,
-        "statusUser": "ONLINE",
+        "statusUser": "OFFLINE",
         "nodo": 42,
         "pppuser": "Celia_Patricia_Valdez_Manteca"
       },
@@ -314,6 +345,37 @@
             "id": 631578,
             "total": "399.00",
             "vencimiento": "2026-03-01"
+          }
+        ]
+      }
+    },
+    {
+      "id": 23766,
+      "nombre": "Juan Carlos Martinez Hernandez",
+      "estado": "SUSPENDIDO",
+      "correo": "juancamarinezher@gmail.com",
+      "movil": "5665859612",
+      "telefono": "5665859612",
+      "direccion": "Localidad Acatl numero 29 Localidad Acatl CP. 92709 Chicontepec, Ver. ",
+      "coordenada": "20.8880835, -98.0734567",
+      "servicio": {
+        "perfil": "2026 Basico Plus 399 x 50MB",
+        "costo": "399.00",
+        "instalado": "2026-02-11",
+        "diasDesdeInstalacion": 29,
+        "statusUser": "ONLINE",
+        "nodo": 54,
+        "pppuser": "Juan_Carlos_Mtz_Hdez"
+      },
+      "facturacion": {
+        "facturasPendientes": 1,
+        "totalDeuda": "399.00",
+        "facturasPagadas": 0,
+        "detalleFacturasPendientes": [
+          {
+            "id": 636652,
+            "total": "399.00",
+            "vencimiento": "2026-03-12"
           }
         ]
       }
@@ -347,5 +409,5 @@
     }
   ],
   "sinFacturaAun": [],
-  "consultadoEn": "2026-03-12T01:06:31.559Z"
+  "consultadoEn": "2026-03-12T22:43:24.964Z"
 }

@@ -213,28 +213,18 @@ async function main() {
     default: lista = retirarModem; filename = 'retirar-modem'; break;
   }
   
-  // Generar timestamp único para evitar conflictos de archivo bloqueado
-  const now = new Date();
-  const timestamp = now.toISOString()
-    .replace('T', '-')
-    .replace(/[:.]/g, '')
-    .split('-')
-    .slice(0, 4)
-    .join('-')
-    .substring(0, 19); // Ej: 2026-03-11-143045
-
   if (format === 'excel') {
-    const buffer = await generateExcel(lista, categoriaCSV === 'todos', {
+    const buffer = await generateExcel(lista, true, {
       retirar: retirarModem.length,
       suspendidos: suspendidosSinPago.length,
       sinFactura: sinFacturaAun.length,
     });
-    const outPath = path.resolve(`${filename}-${timestamp}.xlsx`);
+    const outPath = path.resolve(`${filename}.xlsx`);
     fs.writeFileSync(outPath, buffer);
     console.log(`Excel generado: ${outPath}`);
   } else if (format === 'csv') {
     const csv = generateCSV(lista, categoriaCSV === 'todos');
-    const outPath = path.resolve(`${filename}-${timestamp}.csv`);
+    const outPath = path.resolve(`${filename}.csv`);
     fs.writeFileSync(outPath, csv, 'utf-8');
     console.log(`CSV generado: ${outPath}`);
   }
@@ -518,7 +508,6 @@ async function generateExcel(
     { key: 'costo', header: 'Costo', width: 10 },
     { key: 'instalacion', header: 'F. Instalación', width: 14 },
     { key: 'dias', header: 'Días', width: 7 },
-    { key: 'conexion', header: 'Conexión', width: 11 },
     { key: 'deuda', header: 'Deuda', width: 12 },
     { key: 'vencimiento', header: 'Vencimiento', width: 14 },
     { key: 'nodo', header: 'Nodo', width: 7 },
@@ -569,7 +558,6 @@ async function generateExcel(
       Number(c.servicio.costo),
       c.servicio.instalado,
       c.servicio.diasDesdeInstalacion,
-      c.servicio.statusUser,
       Number(c.facturacion.totalDeuda),
       String(factura1?.vencimiento || 'N/A'),
       c.servicio.nodo,
@@ -598,18 +586,10 @@ async function generateExcel(
 
     // Formato moneda
     row.getCell(9).numFmt = '$#,##0.00';
-    row.getCell(13).numFmt = '$#,##0.00';
-
-    // Color de conexión
-    const conexionCell = row.getCell(12);
-    if (c.servicio.statusUser === 'OFFLINE') {
-      conexionCell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FFDC2626' } };
-    } else if (c.servicio.statusUser === 'ONLINE') {
-      conexionCell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FF16A34A' } };
-    }
+    row.getCell(12).numFmt = '$#,##0.00';
 
     // Color de deuda
-    const deudaCell = row.getCell(13);
+    const deudaCell = row.getCell(12);
     if (Number(c.facturacion.totalDeuda) > 0) {
       deudaCell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FFDC2626' } };
     }
@@ -630,7 +610,7 @@ async function generateExcel(
   });
 
   // --- Auto filtro ---
-  const lastCol = includeCategoria ? 18 : 17;
+  const lastCol = includeCategoria ? 17 : 16;
   ws.autoFilter = {
     from: { row: 4, column: 1 },
     to: { row: 4 + clientes.length, column: lastCol },
@@ -645,7 +625,7 @@ function generateCSV(clientes: ClienteResult[], includeCategoria: boolean): stri
   const headers = [
     'ID', 'Nombre', 'Estado', 'Telefono', 'Celular', 'Correo',
     'Direccion', 'Coordenadas', 'Plan', 'Costo', 'Fecha Instalacion',
-    'Dias Instalado', 'Conexion', 'Nodo', 'PPP User',
+    'Dias Instalado', 'Nodo', 'PPP User',
     'Facturas Pendientes', 'Deuda Total', 'Vencimiento',
     ...(includeCategoria ? ['Categoria'] : []),
   ];
@@ -665,7 +645,7 @@ function generateCSV(clientes: ClienteResult[], includeCategoria: boolean): stri
       String(c.id), esc(c.nombre), c.estado, c.telefono, c.movil, c.correo,
       esc(c.direccion), c.coordenada, esc(c.servicio.perfil),
       '$' + c.servicio.costo, c.servicio.instalado,
-      String(c.servicio.diasDesdeInstalacion), c.servicio.statusUser,
+      String(c.servicio.diasDesdeInstalacion),
       String(c.servicio.nodo), c.servicio.pppuser,
       String(c.facturacion.facturasPendientes), '$' + c.facturacion.totalDeuda,
       String(factura1?.vencimiento || 'N/A'),

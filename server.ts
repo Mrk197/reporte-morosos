@@ -7,7 +7,7 @@ import { platform } from 'os';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
-const PORT = 3000;
+const PORT = 4000;
 
 const RESULTS_DIR = path.join(__dirname, 'results');
 const HISTORY_FILE = path.join(RESULTS_DIR, 'history.json');
@@ -238,23 +238,24 @@ app.get('/api/download/:format', (req, res) => {
 
   child.on('close', (code) => {
     if (code === 0) {
-      // Buscar el archivo generado
-      const today = new Date().toISOString().split('T')[0];
-      let filename = '';
+      // Buscar el archivo generado (con timestamp YYYYMMDDHHMMSS)
+      let baseFilename = '';
       
       if (categoria === 'sinFactura') {
-        filename = `sin-factura-aun-${today}.${format}`;
+        baseFilename = 'sin-factura-aun';
       } else if (categoria === 'todos') {
-        filename = `todos-sin-pagar-${today}.${format}`;
+        baseFilename = 'todos-sin-pagar';
       } else {
-        filename = `retirar-modem-${today}.${format}`;
+        baseFilename = 'retirar-modem';
       }
 
-      const filepath = path.join(__dirname, filename);
+      const fileExtension = format === 'excel' ? 'xlsx' : format;
+      const filepath = path.join(__dirname, `${baseFilename}.${fileExtension}`);
+
       if (fs.existsSync(filepath)) {
-        res.download(filepath);
+        res.download(filepath, `${baseFilename}.${fileExtension}`);
       } else {
-        res.status(404).json({ error: 'Archivo no encontrado' });
+        res.status(404).json({ error: `Archivo no encontrado: ${baseFilename}.${fileExtension}` });
       }
     } else {
       res.status(500).json({ error: `Error ejecutando script: ${stderrData}` });
@@ -262,8 +263,9 @@ app.get('/api/download/:format', (req, res) => {
   });
 });
 
-// Iniciar servidor
-app.listen(PORT, () => {
-  console.log(`\n✅ Servidor iniciado en http://localhost:${PORT}`);
-  console.log(`📊 Abre tu navegador en http://localhost:${PORT}\n`);
+// Iniciar servidor en 0.0.0.0 para permitir acceso remoto y ngrok
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`\n✅ Servidor iniciado en http://0.0.0.0:${PORT}`);
+  console.log(`📊 Acceso local: http://localhost:${PORT}`);
+  console.log(`🌐 Para acceso remoto, usa ngrok: npx ngrok http ${PORT}\n`);
 });
