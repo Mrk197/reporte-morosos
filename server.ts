@@ -3,7 +3,6 @@ import { spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { platform } from 'os';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -13,10 +12,8 @@ const RESULTS_DIR = path.join(__dirname, 'results');
 const HISTORY_FILE = path.join(RESULTS_DIR, 'history.json');
 const LATEST_RESULT_FILE = path.join(RESULTS_DIR, 'latest.json');
 
-// Usar el binario local de tsx (compatible con todos los sistemas operativos)
-const TSX_CMD = platform() === 'win32'
-  ? path.join(__dirname, 'node_modules', '.bin', 'tsx.cmd')
-  : path.join(__dirname, 'node_modules', '.bin', 'tsx');
+// Ejecutar el script compilado con node directamente
+const SCRIPT_PATH = path.join(__dirname, 'new-clients-unpaid.js');
 
 // Crear directorio de resultados si no existe
 if (!fs.existsSync(RESULTS_DIR)) {
@@ -88,9 +85,7 @@ app.post('/api/run-script', (req, res) => {
 
   sendEvent({ status: 'iniciando', mensaje: 'Iniciando script...' });
 
-  // Ejecutar el script con tsx
   const args = [
-    'new-clients-unpaid.ts',
     '--format', String(format),
     '--pages', String(pages),
     '--perfil', String(perfil),
@@ -108,10 +103,9 @@ app.post('/api/run-script', (req, res) => {
     args.push('--hasta-fecha', String(hastaFecha));
   }
 
-  const child = spawn(TSX_CMD, args, {
+  const child = spawn('node', [SCRIPT_PATH, ...args], {
     cwd: __dirname,
     stdio: ['pipe', 'pipe', 'pipe'],
-    shell: true,
   });
 
   let stdoutData = '';
@@ -203,7 +197,6 @@ app.get('/api/download/:format', (req, res) => {
   const { pages = '20', perfil = '2026', categoria = 'retirar', diasInstalacion = '', desdeFecha = '', hastaFecha = '' } = req.query;
 
   const args = [
-    'new-clients-unpaid.ts',
     '--format', String(format),
     '--pages', String(pages),
     '--perfil', String(perfil),
@@ -221,10 +214,9 @@ app.get('/api/download/:format', (req, res) => {
     args.push('--hasta-fecha', String(hastaFecha));
   }
 
-  const child = spawn(TSX_CMD, args, {
+  const child = spawn('node', [SCRIPT_PATH, ...args], {
     cwd: __dirname,
     stdio: ['pipe', 'pipe', 'pipe'],
-    shell: true,
   });
 
   let stdoutData = '';
