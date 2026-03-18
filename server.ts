@@ -13,8 +13,10 @@ const RESULTS_DIR = path.join(__dirname, 'results');
 const HISTORY_FILE = path.join(RESULTS_DIR, 'history.json');
 const LATEST_RESULT_FILE = path.join(RESULTS_DIR, 'latest.json');
 
-// Detectar el comando npx para el sistema operativo actual
-const NPX_CMD = platform() === 'win32' ? 'npx.cmd' : 'npx';
+// Usar el binario local de tsx (compatible con todos los sistemas operativos)
+const TSX_CMD = platform() === 'win32'
+  ? path.join(__dirname, 'node_modules', '.bin', 'tsx.cmd')
+  : path.join(__dirname, 'node_modules', '.bin', 'tsx');
 
 // Crear directorio de resultados si no existe
 if (!fs.existsSync(RESULTS_DIR)) {
@@ -106,7 +108,7 @@ app.post('/api/run-script', (req, res) => {
     args.push('--hasta-fecha', String(hastaFecha));
   }
 
-  const child = spawn(NPX_CMD, ['tsx', ...args], {
+  const child = spawn(TSX_CMD, args, {
     cwd: __dirname,
     stdio: ['pipe', 'pipe', 'pipe'],
     shell: true,
@@ -219,7 +221,7 @@ app.get('/api/download/:format', (req, res) => {
     args.push('--hasta-fecha', String(hastaFecha));
   }
 
-  const child = spawn(NPX_CMD, ['tsx', ...args], {
+  const child = spawn(TSX_CMD, args, {
     cwd: __dirname,
     stdio: ['pipe', 'pipe', 'pipe'],
     shell: true,
