@@ -5,11 +5,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "clientes-sin-pago": "npx tsx new-clients-unpaid.ts",
-    "clientes-sin-pago:excel": "npx tsx new-clients-unpaid.ts --format excel",
-    "clientes-sin-pago:csv": "npx tsx new-clients-unpaid.ts --format csv",
-    "clientes-sin-pago:test": "npx tsx new-clients-unpaid.ts --test",
-    "server": "npx tsx server.ts"
+    "clientes-sin-pago": "tsx new-clients-unpaid.ts",
+    "clientes-sin-pago:excel": "tsx new-clients-unpaid.ts --format excel",
+    "clientes-sin-pago:csv": "tsx new-clients-unpaid.ts --format csv",
+    "clientes-sin-pago:test": "tsx new-clients-unpaid.ts --test",
+    "server": "tsx server.ts"
   },
   "dependencies": {
     "dotenv": "^16.4.7",
