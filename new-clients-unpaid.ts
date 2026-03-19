@@ -413,7 +413,6 @@ export async function generateExcel(
     { key: 'costo', header: 'Costo', width: 10 },
     { key: 'instalacion', header: 'F. Instalación', width: 14 },
     { key: 'dias', header: 'Días', width: 7 },
-    { key: 'conexion', header: 'Conexión', width: 11 },
     { key: 'deuda', header: 'Deuda', width: 12 },
     { key: 'vencimiento', header: 'Vencimiento', width: 14 },
     { key: 'nodo', header: 'Nodo', width: 7 },
@@ -462,7 +461,6 @@ export async function generateExcel(
       Number(c.servicio.costo),
       c.servicio.instalado,
       c.servicio.diasDesdeInstalacion,
-      c.servicio.statusUser,
       Number(c.facturacion.totalDeuda),
       String(factura1?.vencimiento || 'N/A'),
       c.servicio.nodo,
@@ -532,7 +530,7 @@ export function generateCSV(clientes: ClienteResult[], includeCategoria: boolean
   const headers = [
     'ID', 'Nombre', 'Estado', 'Telefono', 'Celular', 'Correo',
     'Direccion', 'Coordenadas', 'Plan', 'Costo', 'Fecha Instalacion',
-    'Dias Instalado', 'Conexion', 'Nodo', 'PPP User',
+    'Dias Instalado', 'Nodo', 'PPP User',
     'Facturas Pendientes', 'Deuda Total', 'Vencimiento',
     ...(includeCategoria ? ['Categoria'] : []),
   ];
@@ -552,7 +550,7 @@ export function generateCSV(clientes: ClienteResult[], includeCategoria: boolean
       String(c.id), esc(c.nombre), c.estado, c.telefono, c.movil, c.correo,
       esc(c.direccion), c.coordenada, esc(c.servicio.perfil),
       '$' + c.servicio.costo, c.servicio.instalado,
-      String(c.servicio.diasDesdeInstalacion), c.servicio.statusUser,
+      String(c.servicio.diasDesdeInstalacion),
       String(c.servicio.nodo), c.servicio.pppuser,
       String(c.facturacion.facturasPendientes), '$' + c.facturacion.totalDeuda,
       String(factura1?.vencimiento || 'N/A'),

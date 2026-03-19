@@ -448,7 +448,7 @@
   <div class="container">
     <!-- NAVBAR -->
     <div class="navbar">
-      <h1>📊 DIGY - Reporte Clientes</h1>
+      <h1>📊 DIGY - Reporte Clientes A Retirar</h1>
       <p>Visualiza y gestiona los reportes de clientes sin primer pago</p>
     </div>
 
@@ -479,11 +479,9 @@
             </select>
           </div>
           <div class="control-group">
-            <label for="format" title="Formato del archivo de salida: JSON para datos estructurados, Excel para visualización, CSV para importación.">Formato de descarga:</label>
+            <label for="format" title="Formato del archivo de salida: Excel para visualización optimizada.">Formato de descarga:</label>
             <select id="format">
-              <option value="json">JSON</option>
               <option value="excel" selected>Excel</option>
-              <option value="csv">CSV</option>
             </select>
           </div>
         </div>
@@ -580,8 +578,8 @@
                   <th>Teléfono</th>
                   <th>Plan</th>
                   <th>Deuda</th>
-                  <th>Conexión</th>
                   <th>Días Instalado</th>
+                  <th>Coordenadas</th>
                 </tr>
               </thead>
               <tbody id="retirar-tbody">
@@ -600,8 +598,8 @@
                   <th>Teléfono</th>
                   <th>Plan</th>
                   <th>Estado</th>
-                  <th>Conexión</th>
                   <th>Días Instalado</th>
+                  <th>Coordenadas</th>
                 </tr>
               </thead>
               <tbody id="suspendidos-tbody">
@@ -620,8 +618,8 @@
                   <th>Teléfono</th>
                   <th>Plan</th>
                   <th>Costo</th>
-                  <th>Conexión</th>
                   <th>Días Instalado</th>
+                  <th>Coordenadas</th>
                 </tr>
               </thead>
               <tbody id="sinFactura-tbody">
@@ -782,8 +780,6 @@
 
       clientes.forEach((c) => {
         const row = document.createElement('tr');
-        const statusClass = c.servicio.statusUser === 'ONLINE' ? 'status-online' : 'status-offline';
-        const statusText = c.servicio.statusUser;
         const deuda = type === 'retirar' ? `$${c.facturacion.totalDeuda}` : '-';
 
         row.innerHTML = `
@@ -791,9 +787,9 @@
           <td>${c.nombre}</td>
           <td>${c.movil || c.telefono}</td>
           <td>${c.servicio.perfil}</td>
-          <td>${type === 'retirar' ? deuda : c.estado}</td>
-          <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+          <td>${type === 'retirar' ? deuda : type === 'suspendidos' ? c.estado : `$${c.servicio.costo}`}</td>
           <td>${c.servicio.diasDesdeInstalacion} días</td>
+          <td>${c.coordenada || 'N/A'}</td>
         `;
         tbody.appendChild(row);
       });
@@ -859,6 +855,26 @@
       window.location.href = url;
     }
 
+    async function loadLastResults() {
+      try {
+        const resp = await fetch('/api/results');
+        const result = await resp.json();
+        
+        if (!result || !result.retirarModem) return;
+        
+        // Mostrar el área de resultados
+        document.getElementById('resultsSection').style.display = 'block';
+        
+        // Cargar datos en las pestañas
+        displayResults(result);
+        
+        // Activar botón de descarga
+        document.getElementById('downloadBtn').disabled = false;
+      } catch (err) {
+        console.error('Error loading last results:', err);
+      }
+    }
+
     async function loadHistory() {
       try {
         const resp = await fetch('/api/history');
@@ -890,6 +906,7 @@
     // Load initial data
     window.addEventListener('load', () => {
       loadHistory();
+      loadLastResults();
       
       // Setup mutual exclusivity for date filters
       const diasInput = document.getElementById('diasInstalacion');

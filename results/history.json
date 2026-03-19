@@ -78,5 +78,125 @@
       "suspendidosSinPago": 1,
       "sinFacturaAun": 0
     }
+  },
+  {
+    "timestamp": "2026-03-12T16:02:40.499Z",
+    "formato": "excel",
+    "perfil": "2026",
+    "categoria": "todos",
+    "filtroFecha": "2026-01-01 a 2026-03-12",
+    "resumen": {
+      "totalClientes": "~24100",
+      "paginasRevisadas": "222-241",
+      "clientesRevisados": 1921,
+      "retirarModem": 15,
+      "suspendidosSinPago": 1,
+      "sinFacturaAun": 0
+    },
+    "totales": {
+      "retirarModem": 15,
+      "suspendidosSinPago": 1,
+      "sinFacturaAun": 0
+    }
+  },
+  {
+    "timestamp": "2026-03-12T16:23:40.075Z",
+    "formato": "excel",
+    "perfil": "2026",
+    "categoria": "todos",
+    "filtroFecha": "2026-01-01 a 2026-03-12",
+    "resumen": {
+      "totalClientes": "~24100",
+      "paginasRevisadas": "212-241",
+      "clientesRevisados": 2922,
+      "retirarModem": 15,
+      "suspendidosSinPago": 1,
+      "sinFacturaAun": 0
+    },
+    "totales": {
+      "retirarModem": 15,
+      "suspendidosSinPago": 1,
+      "sinFacturaAun": 0
+    }
+  },
+  {
+    "timestamp": "2026-03-12T16:34:09.804Z",
+    "formato": "excel",
+    "perfil": "2026",
+    "categoria": "retirar",
+    "filtroFecha": "Últimos 20 días",
+    "resumen": {
+      "totalClientes": "~24100",
+      "paginasRevisadas": "222-241",
+      "clientesRevisados": 1923,
+      "retirarModem": 0,
+      "suspendidosSinPago": 1,
+      "sinFacturaAun": 0
+    },
+    "totales": {
+      "retirarModem": 0,
+      "suspendidosSinPago": 1,
+      "sinFacturaAun": 0
+    }
+  },
+  {
+    "timestamp": "2026-03-12T16:43:48.954Z",
+    "formato": "excel",
+    "perfil": "2026",
+    "categoria": "todos",
+    "filtroFecha": "Últimos 20 días",
+    "resumen": {
+      "totalClientes": "~24100",
+      "paginasRevisadas": "222-241",
+      "clientesRevisados": 1923,
+      "retirarModem": 0,
+      "suspendidosSinPago": 1,
+      "sinFacturaAun": 0
+    },
+    "totales": {
+      "retirarModem": 0,
+      "suspendidosSinPago": 1,
+      "sinFacturaAun": 0
+    }
+  },
+  {
+    "timestamp": "2026-03-12T16:44:40.628Z",
+    "formato": "excel",
+    "perfil": "2026",
+    "categoria": "todos",
+    "filtroFecha": "Últimos 45 días",
+    "resumen": {
+      "totalClientes": "~24100",
+      "paginasRevisadas": "222-241",
+      "clientesRevisados": 1923,
+      "retirarModem": 13,
+      "suspendidosSinPago": 1,
+      "sinFacturaAun": 0
+    },
+    "totales": {
+      "retirarModem": 13,
+      "suspendidosSinPago": 1,
+      "sinFacturaAun": 0
+    }
+  },
+  {
+    "timestamp": "2026-03-12T22:43:25.028Z",
+    "formato": "excel",
+    "perfil": "2026",
+    "categoria": "todos",
+    "filtroFecha": "2026-01-01 a 2026-03-12",
+    "resumen": {
+      "totalClientes": "~24100",
+      "paginasRevisadas": "212-241",
+      "clientesRevisados": 2928,
+      "retirarModem": 12,
+      "suspendidosSinPago": 1,
+      "sinFacturaAun": 0
+    },
+    "totales": {
+      "retirarModem": 12,
+      "suspendidosSinPago": 1,
+      "sinFacturaAun": 0
+    }
   }
 ]
