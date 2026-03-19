@@ -1,62 +1,19 @@
 /**
- * Clientes nuevos sin primer pago - Script standalone
+ * Clientes nuevos sin primer pago
  *
- * Identifica clientes de planes "2026" que no pagaron su primer servicio.
- * Genera JSON, CSV o Excel con los resultados.
- *
- * Uso:
- *   npx tsx new-clients-unpaid.ts                     # JSON en consola
- *   npx tsx new-clients-unpaid.ts --format excel      # Genera .xlsx
- *   npx tsx new-clients-unpaid.ts --format csv        # Genera .csv
- *   npx tsx new-clients-unpaid.ts --test --id 23844   # Consultar 1 cliente
- *   npx tsx new-clients-unpaid.ts --pages 30          # Últimas 30 páginas
- *   npx tsx new-clients-unpaid.ts --perfil "2026"     # Filtro de perfil
- *   npx tsx new-clients-unpaid.ts --categoria todos   # retirar|sinFactura|todos
- *
- * Filtros por fecha de instalación:
- *   npx tsx new-clients-unpaid.ts --dias-instalacion 30     # Últimos 30 días
- *   npx tsx new-clients-unpaid.ts --dias-instalacion 14     # Últimas 2 semanas
- *   npx tsx new-clients-unpaid.ts --desde-fecha 2026-01-01 --hasta-fecha 2026-02-01
- *   npx tsx new-clients-unpaid.ts --desde-fecha 2026-01-15  # Desde fecha hasta hoy
- *   npx tsx new-clients-unpaid.ts --hasta-fecha 2026-02-01  # Desde inicio hasta fecha
+ * Exporta runScript(), generateExcel(), generateCSV() para uso como módulo.
+ * También funciona como CLI: tsx new-clients-unpaid.ts --format excel
  */
 
 import { mikroWispPostRaw, extractFacturas } from './mikrowisp.js';
 import ExcelJS from 'exceljs';
-import fs from 'fs';
-import path from 'path';
-
-// ============================================================
-// CLI Args
-// ============================================================
-
-const args = process.argv.slice(2);
-function getArg(name: string, def: string): string {
-  const idx = args.indexOf(`--${name}`);
-  if (idx === -1) return def;
-  return args[idx + 1] || def;
-}
-function hasFlag(name: string): boolean {
-  return args.includes(`--${name}`);
-}
-
-const perfilBuscado = getArg('perfil', '2026');
-const pagesToCheck = parseInt(getArg('pages', '20'), 10);
-const format = getArg('format', 'json');
-const categoriaCSV = getArg('categoria', 'retirar');
-const testMode = hasFlag('test');
-const testId = getArg('id', '');
-
-// Filtros de fecha de instalación
-const diasInstalacion = getArg('dias-instalacion', '');
-const desdeFecha = getArg('desde-fecha', '');
-const hastaFecha = getArg('hasta-fecha', '');
+import { fileURLToPath } from 'url';
 
 // ============================================================
 // Types
 // ============================================================
 
-interface ClienteResult {
+export interface ClienteResult {
   id: number;
   nombre: string;
   estado: string;
@@ -82,47 +39,66 @@ interface ClienteResult {
   };
 }
 
+export interface ScriptParams {
+  perfil?: string;
+  pages?: number;
+  categoria?: string;
+  diasInstalacion?: string;
+  desdeFecha?: string;
+  hastaFecha?: string;
+  onProgress?: (msg: string) => void;
+}
+
+export interface ScriptResult {
+  resumen: {
+    totalClientes: string;
+    paginasRevisadas: string;
+    clientesRevisados: number;
+    retirarModem: number;
+    suspendidosSinPago: number;
+    sinFacturaAun: number;
+  };
+  retirarModem: ClienteResult[];
+  suspendidosSinPago: ClienteResult[];
+  sinFacturaAun: ClienteResult[];
+  errores?: Array<{ id: number; error: string }>;
+  consultadoEn: string;
+}
+
 // ============================================================
-// Main
+// Main exported function
 // ============================================================
 
-async function main() {
-  console.log('=== Clientes nuevos sin primer pago ===\n');
+export async function runScript(params: ScriptParams = {}): Promise<ScriptResult> {
+  const {
+    perfil: perfilBuscado = '2026',
+    pages: pagesToCheck = 20,
+    diasInstalacion = '',
+    desdeFecha = '',
+    hastaFecha = '',
+    onProgress = () => {},
+  } = params;
 
-  if (testMode && testId) {
-    const result = await queryOneClient(Number(testId));
-    console.log(JSON.stringify(result, null, 2));
-    return;
-  }
+  const shouldInclude = (fechaInstalado: string) =>
+    checkDateFilter(fechaInstalado, { diasInstalacion, desdeFecha, hastaFecha });
 
-  // === Mostrar parámetros activos ===
-  console.log('--- PARÁMETROS ---');
-  console.log(`  Perfil: "${perfilBuscado}"`);
-  console.log(`  Páginas: ${pagesToCheck}`);
-  
+  onProgress('=== Clientes nuevos sin primer pago ===');
+  onProgress(`Perfil: "${perfilBuscado}" | Páginas: ${pagesToCheck}`);
+
   if (diasInstalacion) {
-    console.log(`  Filtro: Últimos ${diasInstalacion} días desde instalación`);
+    onProgress(`Filtro: Últimos ${diasInstalacion} días desde instalación`);
   } else if (desdeFecha || hastaFecha) {
-    const desde = desdeFecha || 'inicio';
-    const hasta = hastaFecha || 'hoy';
-    console.log(`  Filtro: Instalación entre ${desde} y ${hasta}`);
-  } else {
-    console.log(`  Filtro: Sin restricción de fecha`);
+    onProgress(`Filtro: Instalación entre ${desdeFecha || 'inicio'} y ${hastaFecha || 'hoy'}`);
   }
-  
-  console.log(`  Categoría: ${categoriaCSV}`);
-  console.log(`  Formato: ${format}`);
-  console.log('');
 
-  // === PASO 1: Obtener clientes de las últimas páginas ===
-  const totalPages = await findLastPage();
+  // PASO 1: Obtener clientes de las últimas páginas
+  const totalPages = await findLastPage(onProgress);
   const startPage = Math.max(1, totalPages - pagesToCheck + 1);
 
-  console.log(`Páginas ${startPage}-${totalPages}, buscando perfil "${perfilBuscado}"`);
+  onProgress(`Páginas ${startPage}-${totalPages}, buscando perfil "${perfilBuscado}"`);
 
   const clientIds: Array<{ id: number; nombre: string; estado: string }> = [];
 
-  // Obtener IDs en lotes de 5 páginas en paralelo
   for (let p = startPage; p <= totalPages; p += 5) {
     const pages = [];
     for (let pp = p; pp < p + 5 && pp <= totalPages; pp++) pages.push(pp);
@@ -139,15 +115,14 @@ async function main() {
       })
     );
     for (const r of results) clientIds.push(...r);
-    process.stdout.write(`\r  Obteniendo IDs... ${clientIds.length} clientes`);
+    onProgress(`Obteniendo IDs... ${clientIds.length} clientes`);
   }
-  console.log(`\n  ${clientIds.length} IDs obtenidos`);
 
-  // === FILTRO: Solo clientes SUSPENDIDOS ===
+  // Solo SUSPENDIDOS
   const suspendidos = clientIds.filter((c) => c.estado === 'SUSPENDIDO');
-  console.log(`  Filtrados: ${suspendidos.length} clientes SUSPENDIDOS (descartados ${clientIds.length - suspendidos.length} no suspendidos)`);
+  onProgress(`${clientIds.length} IDs obtenidos | ${suspendidos.length} SUSPENDIDOS`);
 
-  // === PASO 2: Consultar detalles y filtrar ===
+  // PASO 2: Consultar detalles y filtrar
   const retirarModem: ClienteResult[] = [];
   const suspendidosSinPago: ClienteResult[] = [];
   const sinFacturaAun: ClienteResult[] = [];
@@ -159,7 +134,7 @@ async function main() {
     const batch = suspendidos.slice(i, i + BATCH);
 
     const batchResults = await Promise.all(
-      batch.map((client) => processClient(client.id, perfilBuscado))
+      batch.map((client) => processClient(client.id, perfilBuscado, shouldInclude))
     );
 
     for (const r of batchResults) {
@@ -178,12 +153,10 @@ async function main() {
     }
 
     processed += batch.length;
-    process.stdout.write(`\r  Procesando... ${processed}/${suspendidos.length} (retirar: ${retirarModem.length}, sinFactura: ${sinFacturaAun.length})`);
+    onProgress(`Procesando... ${processed}/${suspendidos.length} (retirar: ${retirarModem.length}, sinFactura: ${sinFacturaAun.length})`);
 
     if (i + BATCH < suspendidos.length) await sleep(50);
   }
-
-  console.log('\n');
 
   // Ordenar: más antiguos primero
   const byDate = (a: ClienteResult, b: ClienteResult) =>
@@ -192,45 +165,13 @@ async function main() {
   suspendidosSinPago.sort(byDate);
   sinFacturaAun.sort(byDate);
 
-  // === Resumen ===
-  console.log('--- RESUMEN ---');
-  console.log(`  Total clientes: ~${totalPages * 100}`);
-  console.log(`  Páginas revisadas: ${startPage}-${totalPages}`);
-  console.log(`  Clientes en páginas: ${clientIds.length}`);
-  console.log(`  Suspendidos encontrados: ${suspendidos.length}`);
-  console.log(`  Retirar modem: ${retirarModem.length}`);
-  console.log(`  Suspendidos sin pago: ${suspendidosSinPago.length}`);
-  console.log(`  Sin factura aún: ${sinFacturaAun.length}`);
-  if (errores.length > 0) console.log(`  Errores: ${errores.length}`);
-  console.log('');
+  onProgress('--- RESUMEN ---');
+  onProgress(`Retirar modem: ${retirarModem.length}`);
+  onProgress(`Suspendidos sin pago: ${suspendidosSinPago.length}`);
+  onProgress(`Sin factura aún: ${sinFacturaAun.length}`);
+  if (errores.length > 0) onProgress(`Errores: ${errores.length}`);
 
-  // === Exportar ===
-  let lista: ClienteResult[];
-  let filename: string;
-  switch (categoriaCSV) {
-    case 'sinFactura': lista = sinFacturaAun; filename = 'sin-factura-aun'; break;
-    case 'todos': lista = [...retirarModem, ...suspendidosSinPago, ...sinFacturaAun]; filename = 'todos-sin-pagar'; break;
-    default: lista = retirarModem; filename = 'retirar-modem'; break;
-  }
-  
-  if (format === 'excel') {
-    const buffer = await generateExcel(lista, true, {
-      retirar: retirarModem.length,
-      suspendidos: suspendidosSinPago.length,
-      sinFactura: sinFacturaAun.length,
-    });
-    const outPath = path.resolve(`${filename}.xlsx`);
-    fs.writeFileSync(outPath, buffer);
-    console.log(`Excel generado: ${outPath}`);
-  } else if (format === 'csv') {
-    const csv = generateCSV(lista, categoriaCSV === 'todos');
-    const outPath = path.resolve(`${filename}.csv`);
-    fs.writeFileSync(outPath, csv, 'utf-8');
-    console.log(`CSV generado: ${outPath}`);
-  }
-
-  // SIEMPRE generar JSON en stdout para que el servidor pueda parsear
-  console.log(JSON.stringify({
+  return {
     resumen: {
       totalClientes: `~${totalPages * 100}`,
       paginasRevisadas: `${startPage}-${totalPages}`,
@@ -244,7 +185,7 @@ async function main() {
     sinFacturaAun,
     ...(errores.length > 0 && { errores }),
     consultadoEn: new Date().toISOString(),
-  }, null, 2));
+  };
 }
 
 // ============================================================
@@ -253,7 +194,8 @@ async function main() {
 
 async function processClient(
   id: number,
-  perfilBuscado: string
+  perfilBuscado: string,
+  shouldInclude: (fechaInstalado: string) => boolean
 ): Promise<{ data?: ClienteResult; id?: number; error?: string } | null> {
   try {
     const res = await mikroWispPostRaw('GetClientsDetails', { idcliente: id });
@@ -263,19 +205,14 @@ async function processClient(
     const datos = (raw.datos as Array<Record<string, unknown>>)[0];
     const servicios = (datos.servicios || []) as Array<Record<string, unknown>>;
 
-    // Buscar servicio del plan 2026
     const svc = servicios.find((s) =>
       String(s.perfil || '').toLowerCase().includes(perfilBuscado.toLowerCase())
     );
     if (!svc) return null;
 
-    // Obtener fecha de instalación
     const fechaInstalado = String(svc.instalado || '');
-    
-    // Filtrar por fecha de instalación
-    if (!shouldIncludeClient(fechaInstalado)) return null;
+    if (!shouldInclude(fechaInstalado)) return null;
 
-    // Verificar facturas (pagadas + pendientes en paralelo)
     const facturacion = datos.facturacion as Record<string, unknown> | undefined;
     const noPagadas = Number(facturacion?.facturas_nopagadas || 0);
     const totalDeuda = String(facturacion?.total_facturas || '0.00');
@@ -287,13 +224,11 @@ async function processClient(
         : Promise.resolve(null),
     ]);
 
-    // Si tiene pagos, descartar
     if (paidResult) {
       const paidData = paidResult.data as Record<string, unknown>;
       if (paidData.estado === 'exito' && extractFacturas(paidData).length > 0) return null;
     }
 
-    // Detalle de facturas pendientes
     let facturasPendientesDetalle: Array<Record<string, unknown>> = [];
     if (pendResult) {
       const pendData = pendResult.data as Record<string, unknown>;
@@ -348,8 +283,8 @@ async function processClient(
 // Helpers
 // ============================================================
 
-async function findLastPage(): Promise<number> {
-  process.stdout.write('  Buscando última página...');
+async function findLastPage(onProgress: (msg: string) => void): Promise<number> {
+  onProgress('Buscando última página...');
   let low = 1, high = 300, last = 1;
   while (low <= high) {
     const mid = Math.floor((low + high) / 2);
@@ -360,26 +295,38 @@ async function findLastPage(): Promise<number> {
       else high = mid - 1;
     } catch { high = mid - 1; }
   }
-  console.log(` ${last}`);
+  onProgress(`Última página: ${last}`);
   return last;
 }
 
-// ============================================================
-// Filter Functions - Fecha de Instalación
-// ============================================================
+interface FilterParams {
+  diasInstalacion: string;
+  desdeFecha: string;
+  hastaFecha: string;
+}
+
+function checkDateFilter(dateStr: string, params: FilterParams): boolean {
+  if (params.diasInstalacion) {
+    const dias = parseInt(params.diasInstalacion, 10);
+    if (isNaN(dias) || dias < 0) return true;
+    return isDateInRange(dateStr, 0, dias);
+  }
+  if (params.desdeFecha || params.hastaFecha) {
+    const desde = params.desdeFecha ? parseDateParam(params.desdeFecha) : null;
+    const hasta = params.hastaFecha ? parseDateParam(params.hastaFecha) : null;
+    return isDateBetween(dateStr, desde, hasta);
+  }
+  return true;
+}
 
 function isDateInRange(dateStr: string, minDays: number | null, maxDays: number | null): boolean {
-  if (!dateStr) return true; // Si no hay fecha, incluir
-  
+  if (!dateStr) return true;
   try {
     const installDate = new Date(dateStr);
     const today = new Date();
     const daysAgo = Math.floor((today.getTime() - installDate.getTime()) / (1000 * 60 * 60 * 24));
-    
-    // Validar rango de días
     if (minDays !== null && daysAgo < minDays) return false;
     if (maxDays !== null && daysAgo > maxDays) return false;
-    
     return true;
   } catch {
     return true;
@@ -388,7 +335,6 @@ function isDateInRange(dateStr: string, minDays: number | null, maxDays: number 
 
 function isDateBetween(dateStr: string, desde: Date | null, hasta: Date | null): boolean {
   if (!dateStr) return true;
-  
   try {
     const date = new Date(dateStr);
     if (desde && date < desde) return false;
@@ -410,53 +356,13 @@ function parseDateParam(dateStr: string): Date | null {
   }
 }
 
-function shouldIncludeClient(fechaInstalado: string): boolean {
-  // Opción 1: Filtro por días desde instalación
-  if (diasInstalacion) {
-    const dias = parseInt(diasInstalacion, 10);
-    if (isNaN(dias) || dias < 0) {
-      console.error(`⚠️  --dias-instalacion debe ser un número positivo`);
-      return true;
-    }
-    // Incluir clientes instalados en los últimos N días
-    // diasDesdeInstalacion va de 0 (hoy) hacia atrás
-    return isDateInRange(fechaInstalado, 0, dias);
-  }
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-  // Opción 2: Filtro por rango de fechas
-  if (desdeFecha || hastaFecha) {
-    const desde = desdeFecha ? parseDateParam(desdeFecha) : null;
-    const hasta = hastaFecha ? parseDateParam(hastaFecha) : null;
+// ============================================================
+// Excel / CSV generators (exported para uso desde server.ts)
+// ============================================================
 
-    if (desdeFecha && !desde) {
-      console.error(`⚠️  --desde-fecha inválido. Usa formato: YYYY-MM-DD (ej: 2026-01-15)`);
-    }
-    if (hastaFecha && !hasta) {
-      console.error(`⚠️  --hasta-fecha inválido. Usa formato: YYYY-MM-DD (ej: 2026-02-01)`);
-    }
-
-    return isDateBetween(fechaInstalado, desde, hasta);
-  }
-
-  // Sin filtro de fecha
-  return true;
-}
-
-async function queryOneClient(id: number) {
-  console.log(`Consultando cliente ${id}...`);
-  const res = await mikroWispPostRaw('GetClientsDetails', { idcliente: id });
-  let pend = null, paid = null;
-  try {
-    const [p1, p2] = await Promise.all([
-      mikroWispPostRaw('GetInvoices', { idcliente: id, estado: 1 }),
-      mikroWispPostRaw('GetInvoices', { idcliente: id, estado: 0 }),
-    ]);
-    pend = p1.data; paid = p2.data;
-  } catch { /* skip */ }
-  return { clienteDetalle: res.data, facturasPendientes: pend, facturasPagadas: paid };
-}
-
-async function generateExcel(
+export async function generateExcel(
   clientes: ClienteResult[],
   includeCategoria: boolean,
   resumen: { retirar: number; suspendidos: number; sinFactura: number }
@@ -492,7 +398,6 @@ async function generateExcel(
   ws.getCell('K2').font = { name: 'Calibri', size: 10, bold: true };
   ws.getRow(2).height = 20;
 
-  // --- Fila separadora ---
   ws.getRow(3).height = 5;
 
   // --- Headers ---
@@ -517,8 +422,7 @@ async function generateExcel(
   ];
 
   headers.forEach((h, i) => {
-    const col = ws.getColumn(i + 1);
-    col.width = h.width;
+    ws.getColumn(i + 1).width = h.width;
   });
 
   const headerRow = ws.getRow(4);
@@ -539,8 +443,7 @@ async function generateExcel(
 
   // --- Data rows ---
   clientes.forEach((c, idx) => {
-    const rowNum = idx + 5;
-    const row = ws.getRow(rowNum);
+    const row = ws.getRow(idx + 5);
     const factura1 = c.facturacion.detalleFacturasPendientes?.[0];
     const cat = c.facturacion.facturasPendientes > 0
       ? 'RETIRAR MODEM'
@@ -578,23 +481,26 @@ async function generateExcel(
       };
     });
 
-    // Zebra striping
     const bgColor = idx % 2 === 0 ? 'FFFFFFFF' : 'FFF9FAFB';
     values.forEach((_, i) => {
       row.getCell(i + 1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgColor } };
     });
 
-    // Formato moneda
     row.getCell(9).numFmt = '$#,##0.00';
-    row.getCell(12).numFmt = '$#,##0.00';
+    row.getCell(13).numFmt = '$#,##0.00';
 
-    // Color de deuda
-    const deudaCell = row.getCell(12);
+    const conexionCell = row.getCell(12);
+    if (c.servicio.statusUser === 'OFFLINE') {
+      conexionCell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FFDC2626' } };
+    } else if (c.servicio.statusUser === 'ONLINE') {
+      conexionCell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FF16A34A' } };
+    }
+
+    const deudaCell = row.getCell(13);
     if (Number(c.facturacion.totalDeuda) > 0) {
       deudaCell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FFDC2626' } };
     }
 
-    // Color de categoría
     if (includeCategoria) {
       const catCell = row.getCell(values.length);
       if (cat === 'RETIRAR MODEM') {
@@ -609,8 +515,7 @@ async function generateExcel(
     row.height = 22;
   });
 
-  // --- Auto filtro ---
-  const lastCol = includeCategoria ? 17 : 16;
+  const lastCol = includeCategoria ? 18 : 17;
   ws.autoFilter = {
     from: { row: 4, column: 1 },
     to: { row: 4 + clientes.length, column: lastCol },
@@ -620,7 +525,7 @@ async function generateExcel(
   return Buffer.from(buffer);
 }
 
-function generateCSV(clientes: ClienteResult[], includeCategoria: boolean): string {
+export function generateCSV(clientes: ClienteResult[], includeCategoria: boolean): string {
   const BOM = '\uFEFF';
   const headers = [
     'ID', 'Nombre', 'Estado', 'Telefono', 'Celular', 'Correo',
@@ -656,10 +561,61 @@ function generateCSV(clientes: ClienteResult[], includeCategoria: boolean): stri
   return BOM + headers.join(',') + '\n' + rows.join('\n');
 }
 
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+// ============================================================
+// CLI Entry Point (solo para uso local con tsx)
+// ============================================================
 
-// Run
-main().catch((err) => {
-  console.error('Error fatal:', err);
-  process.exit(1);
-});
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  const argv = process.argv.slice(2);
+  const getArg = (name: string, def: string) => {
+    const idx = argv.indexOf(`--${name}`);
+    return idx === -1 ? def : argv[idx + 1] || def;
+  };
+
+  const format = getArg('format', 'json');
+  const categoria = getArg('categoria', 'retirar');
+
+  runScript({
+    perfil: getArg('perfil', '2026'),
+    pages: parseInt(getArg('pages', '20'), 10),
+    categoria,
+    diasInstalacion: getArg('dias-instalacion', ''),
+    desdeFecha: getArg('desde-fecha', ''),
+    hastaFecha: getArg('hasta-fecha', ''),
+    onProgress: (msg) => process.stderr.write('\r' + msg),
+  }).then(async (result) => {
+    process.stderr.write('\n');
+
+    if (format === 'excel' || format === 'csv') {
+      const { default: fs } = await import('fs');
+      const { default: path } = await import('path');
+      const lista = categoria === 'sinFactura' ? result.sinFacturaAun
+        : categoria === 'todos' ? [...result.retirarModem, ...result.suspendidosSinPago, ...result.sinFacturaAun]
+        : result.retirarModem;
+      const basename = categoria === 'sinFactura' ? 'sin-factura-aun'
+        : categoria === 'todos' ? 'todos-sin-pagar' : 'retirar-modem';
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '').substring(0, 15);
+
+      if (format === 'excel') {
+        const buffer = await generateExcel(lista, categoria === 'todos', {
+          retirar: result.retirarModem.length,
+          suspendidos: result.suspendidosSinPago.length,
+          sinFactura: result.sinFacturaAun.length,
+        });
+        const outPath = path.resolve(`${basename}-${timestamp}.xlsx`);
+        fs.writeFileSync(outPath, buffer);
+        process.stderr.write(`Excel generado: ${outPath}\n`);
+      } else {
+        const csv = generateCSV(lista, categoria === 'todos');
+        const outPath = path.resolve(`${basename}-${timestamp}.csv`);
+        fs.writeFileSync(outPath, csv, 'utf-8');
+        process.stderr.write(`CSV generado: ${outPath}\n`);
+      }
+    }
+
+    console.log(JSON.stringify(result, null, 2));
+  }).catch((err) => {
+    console.error('Error fatal:', err);
+    process.exit(1);
+  });
+}

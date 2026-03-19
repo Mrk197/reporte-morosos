@@ -1,76 +1,54 @@
-import express, { Request, Response } from 'express';
-import { spawn } from 'child_process';
-import fs from 'fs';
+import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { runScript, generateExcel, generateCSV, ScriptResult } from './new-clients-unpaid.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
-const PORT = 4000;
+const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 
-const RESULTS_DIR = path.join(__dirname, 'results');
-const HISTORY_FILE = path.join(RESULTS_DIR, 'history.json');
-const LATEST_RESULT_FILE = path.join(RESULTS_DIR, 'latest.json');
+// Historial en memoria (se reinicia con el servidor)
+const history: Array<{
+  timestamp: string;
+  formato: string;
+  perfil: string;
+  categoria: string;
+  filtroFecha: string;
+  resumen: unknown;
+  totales: { retirarModem: number; suspendidosSinPago: number; sinFacturaAun: number };
+}> = [];
 
-// Ejecutar el script compilado con node directamente
-const SCRIPT_PATH = path.join(__dirname, 'new-clients-unpaid.js');
+// Último resultado cacheado (para descarga rápida)
+let lastResult: ScriptResult | null = null;
 
-// Crear directorio de resultados si no existe
-if (!fs.existsSync(RESULTS_DIR)) {
-  fs.mkdirSync(RESULTS_DIR, { recursive: true });
-}
-
-// Middleware
 app.use(express.json());
 app.use(express.static(__dirname));
 
-// ============================================================
-// API Endpoints
-// ============================================================
-
-// GET: Servir la página principal
+// GET: Página principal
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// GET: Obtener últimos resultados
+// GET: Últimos resultados
 app.get('/api/results', (req, res) => {
-  try {
-    if (fs.existsSync(LATEST_RESULT_FILE)) {
-      const data = fs.readFileSync(LATEST_RESULT_FILE, 'utf-8');
-      res.json(JSON.parse(data));
-    } else {
-      res.json(null);
-    }
-  } catch (err) {
-    res.status(500).json({ error: 'Error leyendo resultados' });
-  }
+  res.json(lastResult);
 });
 
-// GET: Obtener histórico de ejecuciones
+// GET: Histórico
 app.get('/api/history', (req, res) => {
-  try {
-    if (fs.existsSync(HISTORY_FILE)) {
-      const data = fs.readFileSync(HISTORY_FILE, 'utf-8');
-      res.json(JSON.parse(data) || []);
-    } else {
-      res.json([]);
-    }
-  } catch (err) {
-    res.status(500).json({ error: 'Error leyendo histórico' });
-  }
+  res.json(history);
 });
 
-// POST: Ejecutar el script
-app.post('/api/run-script', (req, res) => {
-  const { 
+// POST: Ejecutar script
+app.post('/api/run-script', async (req, res) => {
+  const {
     format = 'json',
     pages = '20',
     perfil = '2026',
     categoria = 'retirar',
     diasInstalacion = '',
     desdeFecha = '',
-    hastaFecha = ''
+    hastaFecha = '',
   } = req.body;
 
   res.writeHead(200, {
@@ -85,181 +63,116 @@ app.post('/api/run-script', (req, res) => {
 
   sendEvent({ status: 'iniciando', mensaje: 'Iniciando script...' });
 
-  const args = [
-    '--format', String(format),
-    '--pages', String(pages),
-    '--perfil', String(perfil),
-    '--categoria', String(categoria),
-  ];
+  try {
+    const result = await runScript({
+      perfil: String(perfil),
+      pages: parseInt(String(pages), 10),
+      categoria: String(categoria),
+      diasInstalacion: String(diasInstalacion),
+      desdeFecha: String(desdeFecha),
+      hastaFecha: String(hastaFecha),
+      onProgress: (msg) => sendEvent({ status: 'procesando', linea: msg }),
+    });
 
-  // Agregar parámetros opcionales de fecha
-  if (diasInstalacion) {
-    args.push('--dias-instalacion', String(diasInstalacion));
-  }
-  if (desdeFecha) {
-    args.push('--desde-fecha', String(desdeFecha));
-  }
-  if (hastaFecha) {
-    args.push('--hasta-fecha', String(hastaFecha));
-  }
+    lastResult = result;
 
-  const child = spawn('node', [SCRIPT_PATH, ...args], {
-    cwd: __dirname,
-    stdio: ['pipe', 'pipe', 'pipe'],
-  });
-
-  let stdoutData = '';
-  let stderrData = '';
-
-  child.stdout?.on('data', (data) => {
-    const text = data.toString();
-    stdoutData += text;
-    
-    // Enviar líneas de progreso al cliente
-    const lines = text.split('\n');
-    for (const line of lines) {
-      if (line.trim() && !line.startsWith('{')) {
-        sendEvent({ status: 'procesando', linea: line });
-      }
+    // Guardar en histórico
+    let filtroFecha = 'Sin filtro';
+    if (diasInstalacion) {
+      filtroFecha = `Últimos ${diasInstalacion} días`;
+    } else if (desdeFecha || hastaFecha) {
+      filtroFecha = `${desdeFecha || 'inicio'} a ${hastaFecha || 'hoy'}`;
     }
-  });
 
-  child.stderr?.on('data', (data) => {
-    stderrData += data.toString();
-    sendEvent({ status: 'error', linea: data.toString() });
-  });
+    history.push({
+      timestamp: new Date().toISOString(),
+      formato: String(format),
+      perfil: String(perfil),
+      categoria: String(categoria),
+      filtroFecha,
+      resumen: result.resumen,
+      totales: {
+        retirarModem: result.retirarModem.length,
+        suspendidosSinPago: result.suspendidosSinPago.length,
+        sinFacturaAun: result.sinFacturaAun.length,
+      },
+    });
 
-  child.on('close', (code) => {
-    if (code === 0) {
-      try {
-        // Parsear el JSON del stdout
-        const jsonMatch = stdoutData.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          const result = JSON.parse(jsonMatch[0]);
+    sendEvent({
+      status: 'completo',
+      resultado: result,
+      mensaje: 'Script ejecutado exitosamente',
+    });
+  } catch (err) {
+    sendEvent({
+      status: 'error',
+      mensaje: `Error: ${err instanceof Error ? err.message : 'Error desconocido'}`,
+    });
+  }
 
-          // Guardar resultado actual
-          fs.writeFileSync(LATEST_RESULT_FILE, JSON.stringify(result, null, 2));
-
-          // Guardar en histórico
-          const history = fs.existsSync(HISTORY_FILE)
-            ? JSON.parse(fs.readFileSync(HISTORY_FILE, 'utf-8'))
-            : [];
-          
-          // Determinar filtro de fecha usado
-          let filtroFecha = 'Sin filtro';
-          if (diasInstalacion) {
-            filtroFecha = `Últimos ${diasInstalacion} días`;
-          } else if (desdeFecha || hastaFecha) {
-            const desde = desdeFecha || 'inicio';
-            const hasta = hastaFecha || 'hoy';
-            filtroFecha = `${desde} a ${hasta}`;
-          }
-          
-          history.push({
-            timestamp: new Date().toISOString(),
-            formato: format,
-            perfil: perfil,
-            categoria: categoria,
-            filtroFecha: filtroFecha,
-            resumen: result.resumen,
-            totales: {
-              retirarModem: result.retirarModem?.length || 0,
-              suspendidosSinPago: result.suspendidosSinPago?.length || 0,
-              sinFacturaAun: result.sinFacturaAun?.length || 0,
-            },
-          });
-
-          fs.writeFileSync(HISTORY_FILE, JSON.stringify(history, null, 2));
-
-          sendEvent({
-            status: 'completo',
-            resultado: result,
-            mensaje: 'Script ejecutado exitosamente',
-          });
-        } else {
-          sendEvent({ status: 'error', mensaje: 'No se pudo parsear el resultado' });
-        }
-      } catch (err) {
-        sendEvent({ status: 'error', mensaje: `Error: ${err instanceof Error ? err.message : 'Error desconocido'}` });
-      }
-    } else {
-      sendEvent({ status: 'error', mensaje: `Script falló con código ${code}\n${stderrData}` });
-      console.error('STDERR:', stderrData);
-      console.error('STDOUT:', stdoutData);
-    }
-    res.end();
-  });
+  res.end();
 });
 
-// GET: Descargar Excel/CSV
-app.get('/api/download/:format', (req, res) => {
+// GET: Descargar Excel/CSV (genera en memoria, sin escribir a disco)
+app.get('/api/download/:format', async (req, res) => {
   const { format } = req.params;
-  const { pages = '20', perfil = '2026', categoria = 'retirar', diasInstalacion = '', desdeFecha = '', hastaFecha = '' } = req.query;
+  const {
+    pages = '20',
+    perfil = '2026',
+    categoria = 'retirar',
+    diasInstalacion = '',
+    desdeFecha = '',
+    hastaFecha = '',
+  } = req.query;
 
-  const args = [
-    '--format', String(format),
-    '--pages', String(pages),
-    '--perfil', String(perfil),
-    '--categoria', String(categoria),
-  ];
+  try {
+    const result = await runScript({
+      perfil: String(perfil),
+      pages: parseInt(String(pages), 10),
+      categoria: String(categoria),
+      diasInstalacion: String(diasInstalacion),
+      desdeFecha: String(desdeFecha),
+      hastaFecha: String(hastaFecha),
+    });
 
-  // Agregar parámetros opcionales de fecha
-  if (diasInstalacion) {
-    args.push('--dias-instalacion', String(diasInstalacion));
-  }
-  if (desdeFecha) {
-    args.push('--desde-fecha', String(desdeFecha));
-  }
-  if (hastaFecha) {
-    args.push('--hasta-fecha', String(hastaFecha));
-  }
+    const cat = String(categoria);
+    const lista = cat === 'sinFactura' ? result.sinFacturaAun
+      : cat === 'todos' ? [...result.retirarModem, ...result.suspendidosSinPago, ...result.sinFacturaAun]
+      : result.retirarModem;
 
-  const child = spawn('node', [SCRIPT_PATH, ...args], {
-    cwd: __dirname,
-    stdio: ['pipe', 'pipe', 'pipe'],
-  });
+    const dateStr = new Date().toISOString().split('T')[0];
+    const basename = cat === 'sinFactura' ? 'sin-factura-aun'
+      : cat === 'todos' ? 'todos-sin-pagar'
+      : 'retirar-modem';
 
-  let stdoutData = '';
-  let stderrData = '';
-
-  child.stdout?.on('data', (data) => {
-    stdoutData += data.toString();
-  });
-
-  child.stderr?.on('data', (data) => {
-    stderrData += data.toString();
-  });
-
-  child.on('close', (code) => {
-    if (code === 0) {
-      // Buscar el archivo generado (con timestamp YYYYMMDDHHMMSS)
-      let baseFilename = '';
-      
-      if (categoria === 'sinFactura') {
-        baseFilename = 'sin-factura-aun';
-      } else if (categoria === 'todos') {
-        baseFilename = 'todos-sin-pagar';
-      } else {
-        baseFilename = 'retirar-modem';
-      }
-
-      const fileExtension = format === 'excel' ? 'xlsx' : format;
-      const filepath = path.join(__dirname, `${baseFilename}.${fileExtension}`);
-
-      if (fs.existsSync(filepath)) {
-        res.download(filepath, `${baseFilename}.${fileExtension}`);
-      } else {
-        res.status(404).json({ error: `Archivo no encontrado: ${baseFilename}.${fileExtension}` });
-      }
+    if (format === 'excel') {
+      const buffer = await generateExcel(lista, cat === 'todos', {
+        retirar: result.retirarModem.length,
+        suspendidos: result.suspendidosSinPago.length,
+        sinFactura: result.sinFacturaAun.length,
+      });
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', `attachment; filename="${basename}-${dateStr}.xlsx"`);
+      res.send(buffer);
+    } else if (format === 'csv') {
+      const csv = generateCSV(lista, cat === 'todos');
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="${basename}-${dateStr}.csv"`);
+      res.send(csv);
     } else {
-      res.status(500).json({ error: `Error ejecutando script: ${stderrData}` });
+      res.json(result);
     }
-  });
+  } catch (err) {
+    res.status(500).json({ error: `Error: ${err instanceof Error ? err.message : 'Error desconocido'}` });
+  }
 });
 
-// Iniciar servidor en 0.0.0.0 para permitir acceso remoto y ngrok
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n✅ Servidor iniciado en http://0.0.0.0:${PORT}`);
-  console.log(`📊 Acceso local: http://localhost:${PORT}`);
-  console.log(`🌐 Para acceso remoto, usa ngrok: npx ngrok http ${PORT}\n`);
-});
+// Solo escuchar en local; en Vercel se exporta el app
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`\n✅ Servidor iniciado en http://localhost:${PORT}`);
+    console.log(`📊 Abre tu navegador en http://localhost:${PORT}\n`);
+  });
+}
+
+export default app;
